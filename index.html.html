@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SidelineReel: roster-tagging prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#EEF1EC;--card:#fff;--ink:#12261B;--muted:#5B6B60;--pitch:#1B5E3A;--onpitch:#fff;--flag:#C2410C;--flagbg:#FDEBDD;--line:#D5DCD3;--ok:#1B5E3A;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1A13;--card:#17271D;--ink:#EAF0EA;--muted:#9DB0A2;--pitch:#3FA56C;--onpitch:#08150D;--flag:#FF9A5C;--flagbg:#3A2517;--line:#2A3E31;--ok:#5CCB8B}}
+:root[data-theme="dark"]{--bg:#0E1A13;--card:#17271D;--ink:#EAF0EA;--muted:#9DB0A2;--pitch:#3FA56C;--onpitch:#08150D;--flag:#FF9A5C;--flagbg:#3A2517;--line:#2A3E31;--ok:#5CCB8B}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Barlow,system-ui,sans-serif}
+.wrap{max-width:460px;margin:0 auto;padding:16px 14px 40px}
+h1{font:700 26px/1.1 "Barlow Condensed",Impact,sans-serif;margin:0 0 4px;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.tab{flex:1;border:0;background:none;color:var(--muted);font:600 14px Barlow,sans-serif;padding:10px 4px;border-radius:9px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--pitch);color:var(--onpitch)}
+.tab:focus-visible,button:focus-visible,textarea:focus-visible{outline:3px solid var(--flag);outline-offset:2px}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--flag);color:#fff;font-size:12px;margin-left:4px}
+.hint{font-size:13px;color:var(--muted);background:var(--card);border-left:4px solid var(--pitch);padding:8px 10px;border-radius:0 8px 8px 0;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:12px;align-items:center}
+.crop{flex:none;width:84px;height:96px;border-radius:10px;background:linear-gradient(160deg,#2c7a4b,#154a2c);display:grid;place-items:center;position:relative}
+.crop small{position:absolute;bottom:4px;left:0;right:0;text-align:center;color:#cfe9d8;font-size:10px}
+.meta b{font:700 18px "Barlow Condensed",sans-serif}
+.why{display:inline-block;background:var(--flagbg);color:var(--flag);font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;margin:4px 0}
+.cands{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}
+.cand{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 8px;text-align:left;font:500 14px Barlow,sans-serif;cursor:pointer}
+.cand b{display:block;font:700 20px "Barlow Condensed",sans-serif}
+.cand[aria-pressed=true]{border-color:var(--pitch);background:color-mix(in srgb,var(--pitch) 14%,var(--card))}
+.btn{border:0;border-radius:10px;padding:12px 14px;font:600 15px Barlow,sans-serif;cursor:pointer}
+.primary{background:var(--pitch);color:var(--onpitch);width:100%}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.ghost{background:none;color:var(--muted);text-decoration:underline;padding:8px 0;width:100%}
+.clip{display:flex;gap:12px;align-items:center;transition:opacity .4s,transform .4s}
+.clip.gone{opacity:0;transform:translateX(30px)}
+.clip .crop{width:96px;height:64px}
+.wk{margin-left:auto;border:1.5px solid var(--flag);background:none;color:var(--flag);border-radius:8px;padding:8px 10px;font:600 13px Barlow,sans-serif;cursor:pointer}
+.panel{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink);font:14px Barlow,sans-serif;min-height:56px;margin:6px 0 8px}
+.two{display:flex;gap:8px}.two .btn{flex:1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font:700 28px "Barlow Condensed",sans-serif}.stat span{font-size:12px;color:var(--muted)}
+.log{list-style:none;margin:0;padding:0}.log li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.log li:last-child{border:0}
+.empty{text-align:center;color:var(--muted);padding:26px 10px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%}
+.toast.show{opacity:1}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SidelineReel</h1>
+  <p class="sub">Prototype: roster-tagging accuracy. Same data runs through all three screens.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="view"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+var jerseySvg=function(n,c){return '<svg width="54" height="58" viewBox="0 0 54 58" aria-hidden="true"><path d="M17 2l-14 8 5 12 7-3v37h28V19l7 3 5-12L37 2c-1 5-5 8-10 8S18 7 17 2z" fill="'+c+'"/><text x="27" y="40" text-anchor="middle" font-family="Barlow Condensed,Impact,sans-serif" font-weight="700" font-size="24" fill="#fff">'+n+'</text></svg>'};
+var S={tab:0,open:null,sel:{},taps:{},
+ stats:{removed:0,confirmed:0,left:0},
+ log:[],
+ queue:[
+  {id:'q1',num:'14',clip:'Goal, 12:04',why:'Look-alike pair 14 / 4, confidence 61%',cands:[{n:'Maya Ortiz',j:'14'},{n:'Dario Vance',j:'4'}]},
+  {id:'q2',num:'11',clip:'Save, 31:40',why:'Look-alike pair 11 / 1, confidence 58%',cands:[{n:'Tomas Beck',j:'11'},{n:'Eli Park',j:'1'}]}],
+ reel:[
+  {id:'c1',t:'Goal',time:'0:12',num:'14',own:true},
+  {id:'c2',t:'Assist',time:'0:34',num:'4',own:false},
+  {id:'c3',t:'Corner kick',time:'0:51',num:'14',own:true}]};
+var $=function(s){return document.querySelector(s)};
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('show')},2600)}
+function now(){return new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
+function addLog(m){S.log.unshift(now()+'  '+m)}
+function go(i){S.tab=i;render()}
+function tabs(){var n=['1. Coach queue','2. Parent reel','3. Result'];
+ $('#tabs').innerHTML=n.map(function(l,i){return '<button class="tab" role="tab" aria-selected="'+(S.tab===i)+'" onclick="go('+i+')">'+l+(i===0&&S.queue.length?'<span class="badge">'+S.queue.length+'</span>':'')+'</button>'}).join('')}
+function queueView(){
+ var h='<div class="hint">Held clips stay out of every reel until you decide. Pick the right kid, then confirm: 2 taps. Unconfirmed after 48 hours, a clip is left out and the reel still sends.</div>';
+ if(!S.queue.length)return h+'<div class="card empty"><b>Queue clear.</b><br>No clips are waiting on you. Go to Parent reel and tap "Wrong kid?" on the assist clip to send one here.</div>';
+ S.queue.forEach(function(q){var s=S.sel[q.id];
+  h+='<div class="card"><div class="row"><div class="crop">'+jerseySvg(q.num,'#f5f5f0').replace('fill="#fff"','fill="#12261B"')+'<small>jersey crop</small></div><div class="meta"><b>'+q.clip+'</b><br><span class="why">'+q.why+'</span><br><span style="font-size:13px;color:var(--muted)">'+(q.note?'Parent note: “'+q.note+'”':'Auto-flagged at tagging')+'</span></div></div>'+
+  '<div class="cands" role="group" aria-label="Who is this?">'+q.cands.map(function(c,i){return '<button class="cand" aria-pressed="'+(s===i)+'" onclick="pick(\''+q.id+'\','+i+')"><b>#'+c.j+'</b>'+c.n+'</button>'}).join('')+'</div>'+
+  '<button class="btn primary" '+(s===undefined?'disabled':'')+' onclick="confirmQ(\''+q.id+'\')">'+(s===undefined?'Pick a player to confirm':'Confirm: '+q.cands[s].n)+'</button>'+
+  '<button class="btn ghost" onclick="leave(\''+q.id+'\')">Not sure, leave out of reel</button></div>'});
+ return h}
+function pick(id,i){S.sel[id]=i;S.taps[id]=1;render()}
+function confirmQ(id){var q=S.queue.filter(function(x){return x.id===id})[0],c=q.cands[S.sel[id]];
+ S.queue=S.queue.filter(function(x){return x.id!==id});S.stats.confirmed++;
+ addLog('Coach confirmed “'+q.clip+'” as '+c.n+' (#'+c.j+') in 2 taps.');toast('Confirmed: clip goes to '+c.n+'’s reel');render()}
+function leave(id){var q=S.queue.filter(function(x){return x.id===id})[0];
+ S.queue=S.queue.filter(function(x){return x.id!==id});S.stats.left++;
+ addLog('Coach left “'+q.clip+'” out. A missing clip beats the wrong kid.');toast('Clip left out of the reel');render()}
+function reelView(){
+ var h='<div class="hint">You’re the parent of Maya Ortiz, #14. This week’s reel has a clip that isn’t her. Tap "Wrong kid?" on it.</div><div class="card"><b style="font:700 20px \'Barlow Condensed\',sans-serif">Maya’s week 9 reel</b><div class="note" style="margin:0 0 6px">Ridgeline U12 vs Harbor FC</div>';
+ if(!S.reel.length)h+='<div class="empty">No clips left.</div>';
+ S.reel.forEach(function(c){
+  h+='<div style="padding:10px 0;border-top:1px solid var(--line)"><div class="clip" id="'+c.id+'"><div class="crop">'+jerseySvg(c.num,'#f5f5f0').replace('fill="#fff"','fill="#12261B"').replace('width="54" height="58"','width="40" height="43"')+'</div><div><b>'+c.t+'</b><br><span style="color:var(--muted);font-size:13px">at '+c.time+', wearing #'+c.num+'</span></div><button class="wk" onclick="openWk(\''+c.id+'\')">Wrong kid?</button></div>';
+  if(S.open===c.id)h+='<div class="panel"><b>Remove this clip from Maya’s reel?</b><textarea id="note" aria-label="Optional note" placeholder="Optional note for the coach, e.g. “this is #4, not my daughter”"></textarea><div class="two"><button class="btn ghost" onclick="openWk(null)" style="width:auto">Cancel</button><button class="btn primary" onclick="removeClip(\''+c.id+'\')">Remove clip</button></div></div>';
+  h+='</div>'});
+ return h+'<div class="note">Reel notification goes out at 8:00 am local time. Nothing is sent between 9 pm and 7 am.</div></div>'}
+function openWk(id){S.open=id;render()}
+function removeClip(id){var c=S.reel.filter(function(x){return x.id===id})[0],note=($('#note')||{}).value||'';
+ S.open=null;render();var el=document.getElementById(id);if(el)el.classList.add('gone');
+ setTimeout(function(){S.reel=S.reel.filter(function(x){return x.id!==id});
+  S.queue.unshift({id:'p'+id,num:c.num,clip:c.t+', '+c.time,why:'Reported by a parent as wrong kid',note:note.trim(),cands:[{n:'Dario Vance',j:'4'},{n:'Maya Ortiz',j:'14'}]});
+  S.stats.removed++;addLog('Parent removed “'+c.t+'” from the reel in under 1 second (target: 60). Added to coach queue.');
+  toast('Removed. Sent to the coach to fix.');render()},380)}
+function resultView(){
+ var rem=S.reel.length,ok=S.reel.every(function(c){return c.own});
+ var h='<div class="stats"><div class="stat"><b>'+S.stats.removed+'</b><span>removed by parent</span></div><div class="stat"><b>'+S.queue.length+'</b><span>waiting on coach</span></div><div class="stat"><b>'+S.stats.confirmed+'</b><span>confirmed by coach</span></div></div>';
+ h+='<div class="card"><b>Maya’s reel now</b><p style="margin:6px 0 0;color:'+(ok?'var(--ok)':'var(--flag)')+';font-weight:600">'+rem+' clips, '+(ok?'all #14. Sends at 8:00 am.':'still includes a clip of another kid. Tap "Wrong kid?" on Parent reel.')+'</p></div>';
+ h+='<div class="card"><b>Activity</b>'+(S.log.length?'<ul class="log">'+S.log.map(function(l){return '<li>'+l+'</li>'}).join('')+'</ul>':'<p class="note">Nothing yet. Work through screens 1 and 2 and each action shows up here.</p>')+'</div>';
+ return h+'<div class="note">Spec link: wrong-kid reports per 1,000 reels drop 50% vs baseline; unopened reels fall from about 30% to 20% or less.</div>'}
+function render(){tabs();$('#view').innerHTML=[queueView,reelView,resultView][S.tab]()}
+render();
+</script>
+</body>
+</html>
